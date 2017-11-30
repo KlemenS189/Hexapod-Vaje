@@ -9,13 +9,10 @@ import time
 import multiprocessing as mp
 from queue import Queue
 
-queue1 = Queue() # Stranski to glavni
-queue2 = Queue() # Glavni to stranski
-
-#globalna spremenljivkA
+# globalna spremenljivkA
 torque_alert = 0
 
-#Incializacija seriala
+# Incializacija seriala
 ports = list(serial.tools.list_ports.comports())
 port = []
 ser = None
@@ -32,7 +29,6 @@ for i in range(len(port)):
 
 
 class Application(Frame):
-
     def createWidgets(self):
         """
         Naredi Tkinter GUI
@@ -154,18 +150,32 @@ class Application(Frame):
         root.bind("<Next>", self.Zdown)
         frame.grid()
 
-    def readTorqueAlert(self):
+    def sendAngles(self):
+        kot1H = (self.kot1 >> 8) & 255
+        kot1L = self.kot1 & 255
+        kot2H = (self.kot2 >> 8) & 255
+        kot2L = self.kot2 & 255
+        kot3H = (self.kot3 >> 8) & 255
+        kot3L = self.kot3 & 255
+        kot4H = (self.kot4 >> 8) & 255
+        kot4L = self.kot4 & 255
+        data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
+        # print(self.kot1, self.kot2, self.kot3, self.kot4)
+        ser.write(data)
+        inputSer = ser.readline().decode('utf8')
+        inputSer = int(inputSer)
+        limit = 150
+        if inputSer >= limit and inputSer < 1024 or inputSer >= 1024 + limit and inputSer < 2040:
+            if self.torqueOverload == 0:
+                self.torqueOverload = 1
+                print("Overload")
 
-        # torque_value = queue1.get()
-        # #torque_value = torque_alert
-        # #print(torque_alert)
-        # if torque_value==1:
-        #     print("stop")
-        a = ser.readline().decode("utf8")
-        if a != "":
-            # queue1.put(5)
-            print(a)
-        self.after(500, self.readTorqueAlert)
+        if inputSer >= 0 and inputSer < limit or inputSer >= 1024 and inputSer < 1024 + limit:
+            if self.torqueOverload == 1:
+                self.torqueOverload = 0
+                # print(inputSer)
+
+        self.after(5, self.sendAngles)
 
     def Xup(self, event):
 
@@ -247,19 +257,20 @@ class Application(Frame):
         return predznak
 
     def reset(self):  # Puts the robot to the starting position
-        kot1 = 512
-        kot2 = 300
-        kot3 = 300
-        kot4 = 300
-        kot1H = (kot1 >> 8) & 255
-        kot1L = kot1 & 255
-        kot2H = (kot2 >> 8) & 255
-        kot2L = kot2 & 255
-        kot3H = (kot3 >> 8) & 255
-        kot3L = kot3 & 255
-        kot4H = (kot4 >> 8) & 255
-        kot4L = kot4 & 255
+        self.kot1 = 512
+        self.kot2 = 300
+        self.kot3 = 300
+        self.kot4 = 300
+        kot1H = (self.kot1 >> 8) & 255
+        kot1L = self.kot1 & 255
+        kot2H = (self.kot2 >> 8) & 255
+        kot2L = self.kot2 & 255
+        kot3H = (self.kot3 >> 8) & 255
+        kot3L = self.kot3 & 255
+        kot4H = (self.kot4 >> 8) & 255
+        kot4L = self.kot4 & 255
         data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
+        print(self.kot1, self.kot2, self.kot3, self.kot4)
         ser.write(data)
 
     def readingFromApp1(self):
@@ -386,21 +397,21 @@ class Application(Frame):
             self.q33 = q3
             self.q44 = q4
 
-            kot1 = round(512 + (1023 / 300 * q1))
-            kot2 = round(480 - (1023 / 300 * q2))
-            kot3 = round(485 - (1023 / 300 * q3))
-            kot4 = round(180 + (1023 / 300 * q4))
+            self.kot1 = round(512 + (1023 / 300 * q1))
+            self.kot2 = round(480 - (1023 / 300 * q2))
+            self.kot3 = round(485 - (1023 / 300 * q3))
+            self.kot4 = round(180 + (1023 / 300 * q4))
 
-            kot1H = (kot1 >> 8) & 255
-            kot1L = kot1 & 255
-            kot2H = (kot2 >> 8) & 255
-            kot2L = kot2 & 255
-            kot3H = (kot3 >> 8) & 255
-            kot3L = kot3 & 255
-            kot4H = (kot4 >> 8) & 255
-            kot4L = kot4 & 255
-            data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
-            ser.write(data)
+            # kot1H = (kot1 >> 8) & 255
+            # kot1L = kot1 & 255
+            # kot2H = (kot2 >> 8) & 255
+            # kot2L = kot2 & 255
+            # kot3H = (kot3 >> 8) & 255
+            # kot3L = kot3 & 255
+            # kot4H = (kot4 >> 8) & 255
+            # kot4L = kot4 & 255
+            # data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
+            # ser.write(data)
             # incoming_Stream = ser.readline().decode("utf8")
             # print(incoming_Stream)
             print('Pozicija x: {}, y: {}, z: {}'.format(self.xb, self.yb, self.zb))
@@ -492,51 +503,42 @@ class Application(Frame):
             self.q33 = q3
             self.q44 = q4
 
+            self.kot1 = round(512 + (1023 / 300 * q1))
+            self.kot2 = round(480 - (1023 / 300 * q2))
+            self.kot3 = round(485 - (1023 / 300 * q3))
+            self.kot4 = round(180 + (1023 / 300 * q4))
 
-            kot1 = round(512 + (1023 / 300 * q1))
-            kot2 = round(480 - (1023 / 300 * q2))
-            kot3 = round(485 - (1023 / 300 * q3))
-            kot4 = round(180 + (1023 / 300 * q4))
+            # kot1H = (kot1 >> 8) & 255
+            # kot1L = kot1 & 255
+            # kot2H = (kot2 >> 8) & 255
+            # kot2L = kot2 & 255
+            # kot3H = (kot3 >> 8) & 255
+            # kot3L = kot3 & 255
+            # kot4H = (kot4 >> 8) & 255
+            # kot4L = kot4 & 255
+            # data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
+            # ser.write(data)
 
-            kot1H = (kot1 >> 8) & 255
-            kot1L = kot1 & 255
-            kot2H = (kot2 >> 8) & 255
-            kot2L = kot2 & 255
-            kot3H = (kot3 >> 8) & 255
-            kot3L = kot3 & 255
-            kot4H = (kot4 >> 8) & 255
-            kot4L = kot4 & 255
-            data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
-            ser.write(data)
-            print('Pozicija x: {}, y: {}, z: {}'.format(self.xb, self.yb, self.zb))
-            print('Kot 1: {0:.3f}°, kot 2: {1:.3f}°, kot 3: {2:.3f}°, kot 4: {3:.3f}°'.format(q1, q2, q3, q4))
-            q1 = np.radians(q1)
-            q2 = np.radians(q2)
-            q3 = -np.radians(q3)
-            q4 = -np.radians(q4)
-            xa = (60 * np.cos(q2) + 60 * np.cos(q2 + q3) + 150 * np.cos(q2 + q3 + q4)) * m.cos(q1)
-            za = 60 * np.sin(q2) + 60 * np.sin(q2 + q3) + 150 * np.sin(q2 + q3 + q4)
-            ya = np.tan(q1) * xa
-            print('Napake x: {0:.5f}, y:{1:.5f}, z:{2:.5f} [mm]'.format(abs(xa - self.xb), abs(ya - self.yb),
-                                                                        abs(za - self.zb)))
-            print(np.sqrt(x ** 2 + y ** 2 + z ** 2))
-            time2 = time.clock()
-            cas = (time2 - time1) * 10 ** 3
-            print("Čas za eksekucijo programa je %0.6f ms" % cas)
-            print('Število iteracij {}'.format(i))
-            print("  ")
-            # fig = plt.figure()
-            # ax = Axes3D(fig)
-            # X = [P1ii[0] * m.cos(q1), P2ii[0] * m.cos(q1), P3ii[0] * m.cos(q1), P4ii[0] * m.cos(q1)]
-            # Y = [P1ii[0] * m.sin(q1), P2ii[0] * m.sin(q1), P3ii[0] * m.sin(q1), P4ii[0] * m.sin(q1)]
-            # Z = [P1ii[1], P2ii[1], P3ii[1], P4ii[1]]
-            #
-            # ax.plot(X, Y, Z, label='Graf poteka robotske roke')
-            # ax.plot(X, Y, Z, 'ro', label='Graf poteka robotske roke')
-            # ax.set_xlabel('X os')
-            # ax.set_ylabel('Y os')
-            # ax.set_zlabel('Z os')
-            # plt.show()
+
+            # print('Pozicija x: {}, y: {}, z: {}'.format(self.xb, self.yb, self.zb))
+            # print('Kot 1: {0:.3f}°, kot 2: {1:.3f}°, kot 3: {2:.3f}°, kot 4: {3:.3f}°'.format(q1, q2, q3, q4))
+            # q1 = np.radians(q1)
+            # q2 = np.radians(q2)
+            # q3 = -np.radians(q3)
+            # q4 = -np.radians(q4)
+            # xa = (60 * np.cos(q2) + 60 * np.cos(q2 + q3) + 150 * np.cos(q2 + q3 + q4)) * m.cos(q1)
+            # za = 60 * np.sin(q2) + 60 * np.sin(q2 + q3) + 150 * np.sin(q2 + q3 + q4)
+            # ya = np.tan(q1) * xa
+            # print('Napake x: {0:.5f}, y:{1:.5f}, z:{2:.5f} [mm]'.format(abs(xa - self.xb), abs(ya - self.yb),
+            #                                                             abs(za - self.zb)))
+            # print(np.sqrt(x ** 2 + y ** 2 + z ** 2))
+            # time2 = time.clock()
+            # cas = (time2 - time1) * 10 ** 3
+            # print("Čas za eksekucijo programa je %0.6f ms" % cas)
+            # print('Število iteracij {}'.format(i))
+            # print("  ")
+
+
 
         else:
             print("Koordinata izven dosegljivega območja", x ** 2 + y ** 2 + z ** 2)
@@ -560,47 +562,23 @@ class Application(Frame):
         self.q33 = 45
         self.q44 = 45
         print("Started main thread")
-        # Funkcije
 
+        self.kot1 = 512
+        self.kot2 = 300
+        self.kot3 = 300
+        self.kot4 = 500
 
+        self.torqueOverload = 0
         self.createWidgets()
-        self.readTorqueAlert()
+        self.sendAngles()
 
         self.index = 0
         self.id = None
 
 
-class SerialCommunication:
-    def __init__(self):
-        print("Started secondary thread")
-
-        while 1:
-            pass
-            self.readSerial()
-            time.sleep(0.1)
-
-    def readSerial(self):
-        a = ser.readline().decode("utf8")
-        if a != "":
-            queue1.put(5)
-            print(a)
-
-
-
-
-
-
 if __name__ == '__main__':
-    from threading import Thread
-
-    # p2 = Thread(target=SerialCommunication)
-    # p2.start()
-
-
     root = Tk()
     app = Application(root)
     root.mainloop()
 
-    # p2.join()
     ser.close()
-
