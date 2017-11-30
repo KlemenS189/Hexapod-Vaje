@@ -13,7 +13,7 @@ int zacetek=0;
 int konec;
 int temp;
 int imeCheckNavor=0;
-int speed = 150;
+int speed = 80;
 //Objekti
 RobotControl cmd(3,1);
 
@@ -34,10 +34,10 @@ void setup() {
   cmd.setLocation(3, 300);
   cmd.setLocation(4, 500);
 
-  cmd.setSpeed(1, speed);
-  cmd.setSpeed(2, speed);
-  cmd.setSpeed(3, speed);
-  cmd.setSpeed(4, speed);
+  cmd.setSpeed(1, speed+20);
+  cmd.setSpeed(2, speed+20);
+  cmd.setSpeed(3, speed+40);
+  cmd.setSpeed(4, speed+60);
   cmd.readLocation(4);
 }
 
@@ -54,8 +54,10 @@ void loop() {
     bufer[6] = SerialUSB.read();
     bufer[7] = SerialUSB.read();
     bufer[8] = SerialUSB.read();
-    //SerialUSB.println(imeCheckNavor);
+    SerialUSB.println(cmd.readTorque(1));
+    //torqueSend();
   }
+  //SerialUSB.println(cmd.readTorque(1));
   a = bufer[0];
   b = bufer[1];
   c = bufer[2];
@@ -70,7 +72,7 @@ void loop() {
   kot3=(f<<8)|(g);
   kot4=(h<<8)|(j);
 
-  
+
 
 
   switch (a){
@@ -85,35 +87,38 @@ void loop() {
     break;
   }
   a = 999;
-  
+
   navor1 = cmd.readTorque(1);
   if(navor1 >= 100 && navor1 <= 1000 || navor1 >= 1100 && navor1 <= 2000){
     if(imeCheckNavor==0){
-    //SerialUSB.println(10);
-    
-    imeCheckNavor=1;
-  SerialUSB.println(imeCheckNavor);}
-    
+      //SerialUSB.println(10);
+
+      imeCheckNavor=100;
+    }
+
   }
-  
-  
+
+
   if(navor1 >= 0 && navor1 <= 100 || navor1 >= 1024 && navor1 <= 1100){
-    if(imeCheckNavor==1){
-    imeCheckNavor=0;
-  }  
+    if(imeCheckNavor==100){
+      imeCheckNavor=0;
+    }  
   }
 
 }
 
 void torqueSend(){
-  navor1 = cmd.readTorque(1);
+  navor1 = 
   navor2 = cmd.readTorque(2);
   navor3 = cmd.readTorque(3);
   navor4 = cmd.readTorque(4);
+  SerialUSB.println(navor1);
   if(navor1 >= 200 && navor1 <= 1000 || navor1 >= 1200 && navor1 <= 2000){
-    SerialUSB.println("1000");
+    int abcdefg = 0;
+
   }
 }
+
 
 
 
