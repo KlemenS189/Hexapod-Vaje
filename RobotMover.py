@@ -6,14 +6,14 @@ import serial
 from mpl_toolkits.mplot3d import Axes3D
 import serial.tools.list_ports
 import time
-import multiprocessing as mp
-from queue import Queue
+"""
+Program deluje deluje samo na OS Windows. Ne vem kako se imenujejo serial porti na Linux ali OSX, 
+da bi jih program avtomatsko zaznal.
+Program bo deloval, ob trenutni postavitvi linkov robota. 
+"""
 
-# globalna spremenljivkA
-torque_alert = 0
 
-# Incializacija seriala
-time.sleep(3)
+#Incializacija seriala
 
 ports = list(serial.tools.list_ports.comports())
 port = []
@@ -27,11 +27,11 @@ for i in range(len(port)):
         a = port[i]
         real_port = a[0:4]
         print(real_port)
-        ser = serial.Serial(real_port, baudrate=115200, timeout=0.01)
-        time.sleep(4)
+        ser = serial.Serial(real_port, baudrate=115200, timeout=0.05)
 
 
 class Application(Frame):
+
     def createWidgets(self):
         """
         Naredi Tkinter GUI
@@ -42,60 +42,6 @@ class Application(Frame):
         labelhello = Label(root, text="Welcome to leg controller")
         labelhello.grid(row=0, columnspan=6)
 
-        label1 = Label(root, text="Motor 1")
-        label2 = Label(root, text="Motor 2")
-        label3 = Label(root, text="Motor 3")
-        label4 = Label(root, text="Motor 4")
-
-        label1.grid(row=3)
-        label2.grid(row=4)
-        label3.grid(row=5)
-        label4.grid(row=6)
-
-        label_speed = Label(root, text="Angle")
-        label_torque = Label(root, text="Torque")
-
-        label_speed.grid(row=2, column=1)
-        label_torque.grid(row=2, column=4)
-
-        self.entry1 = Entry(root)
-        self.entry2 = Entry(root)
-        self.entry3 = Entry(root)
-        self.entry4 = Entry(root)
-        self.entry5 = Entry(root)
-        self.entry6 = Entry(root)
-        self.entry7 = Entry(root)
-        self.entry8 = Entry(root)
-
-        self.entry1.grid(row=3, column=1)
-        self.entry2.grid(row=3, column=4)
-        self.entry3.grid(row=4, column=1)
-        self.entry4.grid(row=4, column=4)
-        self.entry5.grid(row=5, column=1)
-        self.entry6.grid(row=5, column=4)
-        self.entry7.grid(row=6, column=1)
-        self.entry8.grid(row=6, column=4)
-
-        gumb1 = Button(root, text="Send", command=self.readingFromApp1)
-        gumb2 = Button(root, text="Send", command=self.readingFromApp2)
-        gumb3 = Button(root, text="Send", command=self.readingFromApp3)
-        gumb4 = Button(root, text="Send", command=self.readingFromApp4)
-        gumb1.grid(row=3, column=5)
-        gumb2.grid(row=4, column=5)
-        gumb3.grid(row=5, column=5)
-        gumb4.grid(row=6, column=5)
-
-        label_coord = Label(root, text="  ")
-        label_coord.grid(row=7, columnspan=6)
-
-        label_coord1 = Label(root, text="Vpis koordinat")
-        label_coord1.grid(row=8, columnspan=6)
-
-        label_time = Label(root, text="Čas premikanja")
-        label_time.grid(row=7)
-        self.entry_time = Entry(root)
-        self.entry_time.grid(row=7, column=1)
-
         label_coord1 = Label(root, text="X")
         label_coord1.grid(row=10, columnspan=2)
         label_coord1 = Label(root, text="Y")
@@ -104,10 +50,13 @@ class Application(Frame):
         label_coord1.grid(row=10, columnspan=2, column=4)
 
         self.xentry = Entry(root)
+        self.xentry.insert(0,100)
         self.xentry.grid(row=11, columnspan=2)
         self.yentry = Entry(root)
+        self.yentry.insert(0, 0)
         self.yentry.grid(row=11, columnspan=2, column=2)
         self.zentry = Entry(root)
+        self.zentry.insert(0, -130)
         self.zentry.grid(row=11, columnspan=2, column=4)
         gumb_koord = Button(root, text="Poslji koordinate", command=self.moving)
         gumb_koord.grid(row=12, columnspan=6)
@@ -121,13 +70,9 @@ class Application(Frame):
         labelemp = Label(root, text=" ")
         labelemp.grid(row=15, columnspan=6)
 
-        labelemp = Label(root, text=" ")
+        labelemp = Label(root, text="V primeru preobremenitve pritisni R za reset")
         labelemp.grid(row=16, columnspan=6)
 
-        self.navor_1 = Text(root, height=1, width=10)
-        self.navor_2 = Text(root, height=1, width=10)
-        self.navor_3 = Text(root, height=1, width=10)
-        self.navor_4 = Text(root, height=1, width=10)
 
         frame = Frame(root)
         root.bind("<Up>", self.Xup)
@@ -136,116 +81,16 @@ class Application(Frame):
         root.bind("<Right>", self.Ydown)
         root.bind("<Prior>", self.Zup)
         root.bind("<Next>", self.Zdown)
+        root.bind("r",self.resetAlarm)
         frame.grid()
 
-    def draw_robot(self, angle_array):
-        l1 = l2 = 60
-        l3 = 150
-
-        q1 = (angle_array[0] - 512) / 1023 * 300
-        q2 = (480 - angle_array[1]) / 1023 * 300
-        q3 = (485 - angle_array[2]) / 1023 * 300
-        q4 = (angle_array[3] - 180) / 1023 * 300
-
-        q1 = m.radians(q1)
-        q2 = m.radians(q2)
-        q3 = -m.radians(q3)
-        q4 = -m.radians(q4)
-
-        x1 = 0
-        x2 = (l1 * m.cos(q2)) * m.cos(q1)
-        x3 = (l1 * m.cos(q2) + l2 * m.cos(q2 + q3)) * m.cos(q1)
-        x4 = (l1 * m.cos(q2) + l2 * m.cos(q2 + q3) + l3 * m.cos(q2 + q3 + q4)) * m.cos(q1)
-
-        z1 = 0
-        z2 = l1 * m.sin(q2)
-        z3 = l1 * m.sin(q2) + l2 * m.sin(q2 + q3)
-        z4 = l1 * m.sin(q2) + l2 * m.sin(q2 + q3) + l3 * m.sin(q2 + q3 + q4)
-
-        y1 = 0
-        y2 = x2 * m.sin(q1)
-        y3 = x3 * m.sin(q1)
-        y4 = x4 * m.sin(q1)
-
-        return x4, y4, z4
-
-    def sendAngles(self):
-        kot1H = (self.kot1 >> 8) & 255
-        kot1L = self.kot1 & 255
-        kot2H = (self.kot2 >> 8) & 255
-        kot2L = self.kot2 & 255
-        kot3H = (self.kot3 >> 8) & 255
-        kot3L = self.kot3 & 255
-        kot4H = (self.kot4 >> 8) & 255
-        kot4L = self.kot4 & 255
-        data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
-        #ser.write(data)
-
-        inputSer = ser.read(9)
-        inputSer = list(inputSer)
-        if len(inputSer) == 9:
-            print(inputSer)
-        try:
-            print(ser.in_waiting)
-        except Exception:
-            pass
-
-        limit1 = 100
-        limit2 = 200
-        limit3 = 150
-        limit4 = 150
-
-        # if int(inputSer[0]) == 0:
-        #     # print(inputSer[1], inputSer[2], inputSer[3], inputSer[4], inputSer[5], inputSer[6], inputSer[7],
-        #     #       inputSer[8])
-        #     navor1 = int(inputSer[1])
-        #     navor2 = int(inputSer[2])
-        #     navor3 = int(inputSer[3])
-        #     navor4 = int(inputSer[4])
-        #     # angle1 = int(inputSer[5])
-        #     # angle2 = int(inputSer[6])
-        #     # angle3 = int(inputSer[7])
-        #     # angle4 = int(inputSer[8])
-        #     ############################################# MOTOR 1
-        #     if navor1 >= limit1 and navor1 < 1024 or navor1 >= 1024 + limit1 and navor1 < 2040:
-        #         if self.torqueOverload1 == 0:
-        #             self.torqueOverload1 = 1
-        #             print("Overload Motor 1")
-        #
-        #     if navor1 >= 0 and navor1 < 50 or navor1 >= 1024 and navor1 < 1024 + 50:
-        #         if self.torqueOverload1 == 1:
-        #             self.torqueOverload1 = 0
-        #             # print(inputSer)
-        #             # ############################################# MOTOR 2
-        #             #         if navor2 >= limit2 and navor2 < 1024 or navor2 >= 1024 + limit2 and navor2 < 2040:
-        #             #             if self.torqueOverload2 == 0:
-        #             #                 self.torqueOverload2 = 1
-        #             #                 print("Overload Motor 2")
-        #             #
-        #             #         if navor2 >= 0 and navor2 < 50 or navor2 >= 1024 and navor2 < 1024 + 50:
-        #             #             if self.torqueOverload2 == 1:
-        #             #                 self.torqueOverload2= 0
-        #             ############################################ MOTOR 3
-        #     if navor3 >= limit3 and navor3 < 1024 or navor3 >= 1024 + limit3 and navor3 < 2040:
-        #         if self.torqueOverload2 == 0:
-        #             self.torqueOverload2 = 1
-        #             print("Overload Motor 3")
-        #
-        #     if navor3 >= 0 and navor3 < 50 or navor3 >= 1024 and navor3 < 1024 + 50:
-        #         if self.torqueOverload2 == 1:
-        #             self.torqueOverload2 = 0
-        #             ############################################ MOTOR 4
-        #     if navor4 >= limit4 and navor4 < 1024 or navor4 >= 1024 + limit4 and navor4 < 2040:
-        #         if self.torqueOverload2 == 0:
-        #             self.torqueOverload2 = 1
-        #             print("Overload Motor 4")
-        #
-        #     if navor4 >= 0 and navor4 < 50 or navor4 >= 1024 and navor4 < 1024 + 50:
-        #         if self.torqueOverload2 == 1:
-        #             self.torqueOverload2 = 0
-        #             ############################################
-
-        self.after(5, self.sendAngles)
+    def resetAlarm(self, event):
+        print("Obremenitev resetirana")
+        self.xb = 70
+        self.yb = 0
+        self.zb = -100
+        self.movingX(method="alarm")
+        # ser.write(data)
 
 
     def Xup(self, event):
@@ -300,6 +145,11 @@ class Application(Frame):
             print("Izven delovnega območja")
 
     def angle_side(self, P_1, P_2, P_3, i):
+        """
+        Funkcija za izračun predznaka kota. 
+        :return: predznak
+        """
+        predznak = 0
         k = (P_2[1] - P_1[1]) / (P_2[0] - P_1[0])
         fun_org = k * (P_3[0] - P_1[0]) + P_1[1]  # Dobimo vrednost funkcije, če za x vstavimo P_3[0]
         if i == 1:
@@ -328,69 +178,22 @@ class Application(Frame):
         return predznak
 
     def reset(self):  # Puts the robot to the starting position
-        self.kot1 = 512
-        self.kot2 = 300
-        self.kot3 = 300
-        self.kot4 = 300
-        kot1H = (self.kot1 >> 8) & 255
-        kot1L = self.kot1 & 255
-        kot2H = (self.kot2 >> 8) & 255
-        kot2L = self.kot2 & 255
-        kot3H = (self.kot3 >> 8) & 255
-        kot3L = self.kot3 & 255
-        kot4H = (self.kot4 >> 8) & 255
-        kot4L = self.kot4 & 255
+        kot1 = 512
+        kot2 = 300
+        kot3 = 300
+        kot4 = 300
+        kot1H = (kot1 >> 8) & 255
+        kot1L = kot1 & 255
+        kot2H = (kot2 >> 8) & 255
+        kot2L = kot2 & 255
+        kot3H = (kot3 >> 8) & 255
+        kot3L = kot3 & 255
+        kot4H = (kot4 >> 8) & 255
+        kot4L = kot4 & 255
         data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
-
         ser.write(data)
 
-    def readingFromApp1(self):
-        motor = 1
-        speed = int(self.entry1.get())
-        torque = int(self.entry2.get())
-        pByte_speed = (speed >> 8) & 255
-        dByte_speed = speed & 255
-        pByte_torque = (torque >> 8) & 255
-        dByte_torque = torque & 255
-        data = ([motor, pByte_speed, dByte_speed, pByte_torque, dByte_torque, 0, 0, 0, 0])
-        ser.write(data)
-        print(ser.readline().decode("ascii"))
 
-    def readingFromApp2(self):
-        motor = 2
-        speed = int(self.entry3.get())
-        torque = int(self.entry4.get())
-        pByte_speed = (speed >> 8) & 255
-        dByte_speed = speed & 255
-        pByte_torque = (torque >> 8) & 255
-        dByte_torque = torque & 255
-        data = ([motor, pByte_speed, dByte_speed, pByte_torque, dByte_torque, 0, 0, 0, 0])
-        ser.write(data)
-        print(ser.readline().decode("ascii"))
-
-    def readingFromApp3(self):
-        motor = 3
-        speed = int(self.entry5.get())
-        torque = int(self.entry6.get())
-        pByte_speed = (speed >> 8) & 255
-        dByte_speed = speed & 255
-        pByte_torque = (torque >> 8) & 255
-        dByte_torque = torque & 255
-        data = ([motor, pByte_speed, dByte_speed, pByte_torque, dByte_torque, 0, 0, 0, 0])
-        ser.write(data)
-        print(ser.readline().decode("ascii"))
-
-    def readingFromApp4(self):
-        motor = 4
-        speed = int(self.entry7.get())
-        torque = int(self.entry8.get())
-        pByte_speed = (speed >> 8) & 255
-        dByte_speed = speed & 255
-        pByte_torque = (torque >> 8) & 255
-        dByte_torque = torque & 255
-        data = ([motor, pByte_speed, dByte_speed, pByte_torque, dByte_torque, 0, 0, 0, 0])
-        ser.write(data)
-        print(ser.readline().decode("ascii"))
 
     def speedCalculate(self, KOT1, KOT2, time):
         delta = abs(KOT2 - KOT1)
@@ -400,7 +203,7 @@ class Application(Frame):
         rpm_int = round(rpm / 0.111)
         return rpm_int
 
-    def movingX(self):
+    def movingX(self, method = "normal"):
         """
         Izvede preračun za novo pozicijo in jo preko klica ser.write() pošlje na mikrokrmilnik.
         :return: 
@@ -468,24 +271,30 @@ class Application(Frame):
             self.q33 = q3
             self.q44 = q4
 
-            self.kot1 = round(512 + (1023 / 300 * q1))
-            self.kot2 = round(480 - (1023 / 300 * q2))
-            self.kot3 = round(485 - (1023 / 300 * q3))
-            self.kot4 = round(180 + (1023 / 300 * q4))
+            kot1 = round(512 + (1023 / 300 * q1))
+            kot2 = round(480 - (1023 / 300 * q2))
+            kot3 = round(485 - (1023 / 300 * q3))
+            kot4 = round(180 + (1023 / 300 * q4))
+            print(kot1, kot2, kot3, kot4)
+            kot1H = (kot1 >> 8) & 255
+            kot1L = kot1 & 255
+            kot2H = (kot2 >> 8) & 255
+            kot2L = kot2 & 255
+            kot3H = (kot3 >> 8) & 255
+            kot3L = kot3 & 255
+            kot4H = (kot4 >> 8) & 255
+            kot4L = kot4 & 255
+            if method == "normal":
+                data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
+                ser.write(data)
+            elif method == "alarm":
+                data = ([7, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
+                ser.write(data)
+            print('Pozicija x: {}, y: {}, z: {}'.format(self.xb, self.yb, self.zb))
+            print('Kot 1: {0:.3f}°, kot 2: {1:.3f}°, kot 3: {2:.3f}°, kot 4: {3:.3f}°'.format(q1, q2, q3, q4))
 
-            kot1H = (self.kot1 >> 8) & 255
-            kot1L = self.kot1 & 255
-            kot2H = (self.kot2 >> 8) & 255
-            kot2L = self.kot2 & 255
-            kot3H = (self.kot3 >> 8) & 255
-            kot3L = self.kot3 & 255
-            kot4H = (self.kot4 >> 8) & 255
-            kot4L = self.kot4 & 255
-            data = ([9, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
-            # ser.write(data)
+            # Odkomentiraj za dodatne informacije
 
-            # print('Pozicija x: {}, y: {}, z: {}'.format(self.xb, self.yb, self.zb))
-            # print('Kot 1: {0:.3f}°, kot 2: {1:.3f}°, kot 3: {2:.3f}°, kot 4: {3:.3f}°'.format(q1, q2, q3, q4))
             # q1 = np.radians(q1)
             # q2 = np.radians(q2)
             # q3 = -np.radians(q3)
@@ -509,9 +318,6 @@ class Application(Frame):
         x = int(self.xentry.get())  # -self.ix
         y = int(self.yentry.get())
         z = int(self.zentry.get())  # -self.h
-        self.xb = x
-        self.yb = y
-        self.zb = z
         # Začetni pogoji
 
         if x ** 2 + y ** 2 + z ** 2 <= 67600:
@@ -576,27 +382,24 @@ class Application(Frame):
             self.q33 = q3
             self.q44 = q4
 
-            self.kot1 = round(512 + (1023 / 300 * q1))
-            self.kot2 = round(480 - (1023 / 300 * q2))
-            self.kot3 = round(485 - (1023 / 300 * q3))
-            self.kot4 = round(180 + (1023 / 300 * q4))
 
-            # if self.torqueOverload1 == 1:
-            #     ser.write([7, 0, 0, 0, 0, 0, 0, 0, 0])
+            kot1 = round(512 + (1023 / 300 * q1))
+            kot2 = round(480 - (1023 / 300 * q2))
+            kot3 = round(485 - (1023 / 300 * q3))
+            kot4 = round(180 + (1023 / 300 * q4))
 
-
-
-
-
-
-
-
-
-
-
-
-            # print('Pozicija x: {}, y: {}, z: {}'.format(self.xb, self.yb, self.zb))
-            # print('Kot 1: {0:.3f}°, kot 2: {1:.3f}°, kot 3: {2:.3f}°, kot 4: {3:.3f}°'.format(q1, q2, q3, q4))
+            kot1H = (kot1 >> 8) & 255
+            kot1L = kot1 & 255
+            kot2H = (kot2 >> 8) & 255
+            kot2L = kot2 & 255
+            kot3H = (kot3 >> 8) & 255
+            kot3L = kot3 & 255
+            kot4H = (kot4 >> 8) & 255
+            kot4L = kot4 & 255
+            data = ([8, kot1H, kot1L, kot2H, kot2L, kot3H, kot3L, kot4H, kot4L])
+            ser.write(data)
+            print('Pozicija x: {}, y: {}, z: {}'.format(self.xb, self.yb, self.zb))
+            print('Kot 1: {0:.3f}°, kot 2: {1:.3f}°, kot 3: {2:.3f}°, kot 4: {3:.3f}°'.format(q1, q2, q3, q4))
             # q1 = np.radians(q1)
             # q2 = np.radians(q2)
             # q3 = -np.radians(q3)
@@ -614,17 +417,16 @@ class Application(Frame):
             # print("  ")
 
 
-
         else:
             print("Koordinata izven dosegljivega območja", x ** 2 + y ** 2 + z ** 2)
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
         # Spremenljivke
-        self.xb = 150
+        self.xb = 70
         self.yb = 0
-        self.zb = -50
-        self.i = 8  # Velikost koraka premika [mm]
+        self.zb = -100
+        self.i = 10  # Velikost koraka premika [mm]
         self.h = 295
         self.ix = 50
 
@@ -637,22 +439,20 @@ class Application(Frame):
         self.q33 = 45
         self.q44 = 45
         print("Started main thread")
+        # Funkcije
 
-        self.kot1 = 512
-        self.kot2 = 300
-        self.kot3 = 300
-        self.kot4 = 500
-
-        self.torqueOverload1 = 0
-        self.torqueOverload2 = 0
-        self.torqueOverload3 = 0
-        self.torqueOverload4 = 0
 
         self.createWidgets()
-        self.sendAngles()
+        #self.readTorqueAlert()
 
         self.index = 0
         self.id = None
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -662,3 +462,4 @@ if __name__ == '__main__':
     root.mainloop()
 
     ser.close()
+
