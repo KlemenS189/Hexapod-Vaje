@@ -52,7 +52,7 @@ class Application():
         #gs1 = gridspec.GridSpec(2, 1)
         axes = fig.gca(projection="3d")
         axes.set_xlim(-50, 200)
-        axes.set_ylim(-250, 100)
+        axes.set_ylim(-100, 100)
         axes.set_zlim(-200,200)
         axes, = axes.plot([], [], [])
 
@@ -68,7 +68,6 @@ class Application():
 
             plt.draw()
             plt.pause(0.01)
-            #plt.cla()
 
     def read_angles(self, input):
 
@@ -108,10 +107,16 @@ class Application():
         y3 = x3 * m.sin(q1)
         y4 = x4 * m.sin(q1)
 
+        x1 = 0
+        x2 = x2 * m.cos(q1)
+        x3 = x3 * m.cos(q1)
+        x4 = x4 * m.cos(q1)
+
         X = np.array([x1, x2, x3, x4])
         Y = np.array([y1, y2, y3, y4])
         Z = np.array([z1, z2, z3, z4])
-        print(m.sin(q1)*100, y2, y3, y4)
+        #print(m.sin(q1)*100, y2, y3, y4)
+        #print(m.degrees(q1),x4,y4)
         return X, Y, Z
 
 
