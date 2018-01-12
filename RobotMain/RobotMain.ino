@@ -1,3 +1,5 @@
+//Created by Klemen Štrajhar
+
 #include <robolib.h>
 #define interval 1000
 

@@ -7,6 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import serial.tools.list_ports
 import time
 """
+Created by: Klemen Štrajhar
 Program deluje deluje samo na OS Windows. Ne vem kako se imenujejo serial porti na Linux ali OSX, 
 da bi jih program avtomatsko zaznal.
 Program bo deloval, ob trenutni postavitvi linkov robota. 

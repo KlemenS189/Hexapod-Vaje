@@ -7,6 +7,7 @@ import math as m
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+#Created by: Klemen Štrajhar
 
 
 class Application():
@@ -121,6 +122,6 @@ class Application():
 
 
 app = Application()
-#
-# app.close_serial()
+
+app.close_serial()
 

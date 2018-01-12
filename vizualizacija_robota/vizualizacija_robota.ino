@@ -1,3 +1,5 @@
+//Created by Klemen Štrajhar
+
 #include "robolib.h"
 
 RobotControl cmd(3,1);
