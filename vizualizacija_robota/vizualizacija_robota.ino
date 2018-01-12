@@ -7,7 +7,6 @@ int kot1,kot2,kot3,kot4;
 void setup() {
   // put your setup code here, to run once:
     SerialUSB.begin();
-    
 }
 
 void loop() {

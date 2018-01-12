@@ -296,20 +296,20 @@ class Application(Frame):
 
             # Odkomentiraj za dodatne informacije
 
-            # q1 = np.radians(q1)
-            # q2 = np.radians(q2)
-            # q3 = -np.radians(q3)
-            # q4 = -np.radians(q4)
-            # xa = (60 * np.cos(q2) + 60 * np.cos(q2 + q3) + 150 * np.cos(q2 + q3 + q4)) * m.cos(q1)
-            # za = 60 * np.sin(q2) + 60 * np.sin(q2 + q3) + 150 * np.sin(q2 + q3 + q4)
-            # ya = np.tan(q1) * xa
-            # print('Napake x: {0:.5f}, y:{1:.5f}, z:{2:.5f} [mm]'.format(abs(xa - self.xb), abs(ya - self.yb),
-            #                                                             abs(za - self.zb)))
-            # time2 = time.clock()
-            # cas = (time2 - time1) * 10 ** 3
-            # print("Čas za eksekucijo programa je %0.6f ms" % cas)
-            # print('Število iteracij {}'.format(i))
-            # print("  ")
+            q1 = np.radians(q1)
+            q2 = np.radians(q2)
+            q3 = -np.radians(q3)
+            q4 = -np.radians(q4)
+            xa = (60 * np.cos(q2) + 60 * np.cos(q2 + q3) + 150 * np.cos(q2 + q3 + q4)) * m.cos(q1)
+            za = 60 * np.sin(q2) + 60 * np.sin(q2 + q3) + 150 * np.sin(q2 + q3 + q4)
+            ya = np.tan(q1) * xa
+            print('Napake x: {0:.5f}, y:{1:.5f}, z:{2:.5f} [mm]'.format(abs(xa - self.xb), abs(ya - self.yb),
+                                                                        abs(za - self.zb)))
+            time2 = time.clock()
+            cas = (time2 - time1) * 10 ** 3
+            print("Čas za eksekucijo programa je %0.6f ms" % cas)
+            print('Število iteracij {}'.format(i))
+            print("  ")
 
         else:
             print("Koordinata izven dosegljivega območja", x ** 2 + y ** 2 + z ** 2)
@@ -320,7 +320,9 @@ class Application(Frame):
         y = int(self.yentry.get())
         z = int(self.zentry.get())  # -self.h
         # Začetni pogoji
-
+        self.xb = x
+        self.xy = y
+        self.zb = z
         if x ** 2 + y ** 2 + z ** 2 <= 67600:
             q2 = m.radians(int(90))
             q3 = m.radians(int(45))

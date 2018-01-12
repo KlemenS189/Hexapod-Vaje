@@ -94,9 +94,9 @@ class Application():
         q4 = -m.radians(q4)
 
         x1 = 0
-        x2 = (l1 * m.cos(q2)) * m.cos(q1)
-        x3 = (l1 * m.cos(q2) + l2 * m.cos(q2 + q3)) * m.cos(q1)
-        x4 = (l1 * m.cos(q2) + l2 * m.cos(q2 + q3) + l3 * m.cos(q2 + q3 + q4)) * m.cos(q1)
+        x2 = (l1 * m.cos(q2))
+        x3 = (l1 * m.cos(q2) + l2 * m.cos(q2 + q3))
+        x4 = (l1 * m.cos(q2) + l2 * m.cos(q2 + q3) + l3 * m.cos(q2 + q3 + q4))
 
         z1 = 0
         z2 = l1 * m.sin(q2)
